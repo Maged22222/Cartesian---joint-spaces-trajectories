@@ -3,11 +3,12 @@ clear, clc, close all
 
 % Define waypoints and times (example values)
 waypoints = [0.6 0.5 0 -0.8; -0.2 0 -0.25 -0.1; 0.6 0.3 1 0.65]; % Example waypoints
-waypointTimes = [0 2 4 6]; % Time at each waypoint
+waypoints(:,4)=waypoints(:,1);
+waypointTimes = [0 1 2 3]; % Time at each waypoint
 waypointAccelTimes = [0.5 0.5 0.5]; % Acceleration time for each segment
 numWaypoints = size(waypoints,2);
 % Use a small sample time for this example
-ts = 0.02;
+ts = 0.01;
 trajTimes = 0:ts:waypointTimes(end);
 
 taskOrientWaypoints =zeros(3,numel(trajTimes));
@@ -27,7 +28,7 @@ eeName = 'link7';
 angleThreshold = 0.000001;
 % Define IK
 ik = inverseKinematics('RigidBodyTree',puma);
-ikWeights = [0 0 0 1 1 1];
+ikWeights = [1 1 1 1 1 1];
 ikInitGuess =jointAnglesHome;
 numJoints = numel(puma.homeConfiguration);
 

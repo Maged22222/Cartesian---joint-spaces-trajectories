@@ -3,7 +3,8 @@ clear, clc, close all
 
 % Define waypoints and times (example values)
 waypoints = [0.6 0.5 0 -0.8; -0.2 0 -0.25 -0.1; 0.6 0.3 1 0.65]; % Example waypoints
-waypointTimes = [0 2 4 6]; % Time at each waypoint
+waypoints(:,4)=waypoints(:,1);
+waypointTimes = [0 1 2 3]; % Time at each waypoint
 waypointAccelTimes = [0.5 0.5 0.5]; % Acceleration time for each segment
 max_joint_threshold=0.3;
 
@@ -16,7 +17,7 @@ yawAngles = [0, pi/8, -pi/8, pi/4];   % Yaw angles (in radians)
 orientations = [rollAngles; pitchAngles; yawAngles];
 
 % Use a small sample time for this example
-ts = 0.02;
+ts = 0.01;
 
 % Define home joint angles (example values)
 jointAnglesHome = [0 0 0 0 0 0]; % Home configuration for PUMA

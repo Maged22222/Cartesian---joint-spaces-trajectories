@@ -3,7 +3,8 @@ clear, clc, close all
 
 % Define waypoints and times (example values)
 waypoints = [0.6 0.5 0 -0.8; -0.2 0 -0.25 -0.1; 0.6 0.3 1 0.65]; % Example waypoints
-waypointTimes = [0 2 4 6]; % Time at each waypoint
+waypoints(:,4)=waypoints(:,1);
+waypointTimes = [0 1 2 3]; % Time at each waypoint
 waypointAccelTimes = [0.5 0.5 0.5]; % Acceleration time for each segment
 numWaypoints = size(waypoints,2);
 % Use a small sample time for this example

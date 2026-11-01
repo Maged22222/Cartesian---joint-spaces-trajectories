@@ -4,8 +4,8 @@ clear, clc, close all
 % Define waypoints and times (example values)
 waypoints = [0.6 0.5 0 -0.8; -0.2 0 -0.25 -0.1; 0.6 0.3 1 0.65]; % Example waypoints
 waypoints(:,4)=waypoints(:,1);
-orientations = [0 0 0; 0 pi/4 0; 0 pi/2 0; 0 pi 0];
-waypointTimes = [0 2 4 6]; % Time at each waypoint
+orientations = [0 0 0; pi/6 -pi/12 pi/8; pi/4 pi/12 -pi/8; pi/3 0 pi/4];
+waypointTimes = [0 1 2 3]; % Time at each waypoint
 waypointAccelTimes = [0.5 0.5 0.5]; % Acceleration time for each segment
 trajType = 'quintic';
 % Define nonzero velocity boundary conditions for all joints
