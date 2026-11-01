@@ -59,7 +59,7 @@ plot3(waypoints(1,:),waypoints(2,:),waypoints(3,:),'ro','LineWidth',2);
 
 %% Solve IK for all waypoints and includeOrientation = false
 includeOrientation = false; % Set this to use zero vs. nonzero orientations
-ikWeights = [0 0 0 1 1 1];
+ikWeights = [1 1 1 1 1 1];
 numWaypoints = size(waypoints,2);
 numJoints = numel(puma.homeConfiguration);
 
