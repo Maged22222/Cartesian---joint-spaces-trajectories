@@ -32,7 +32,7 @@ function plotJointComparison(trajTimes, q1, q2, waypointTimes, labels, numJoints
         plot(trajTimes, q2(i, :), 'LineWidth', 1.5);
 
         for wIdx = 1:numWaypoints
-            xline(waypointTimes(wIdx), 'k--');
+            xline(waypointTimes(wIdx), 'k--', 'HandleVisibility', 'off');
         end
 
         title(['Joint ', num2str(i), ' Position']);

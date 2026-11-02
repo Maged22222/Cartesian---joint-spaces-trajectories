@@ -85,23 +85,32 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
         end
 
         for i = 1:numJoints
-            figure;
+            figure('Name', sprintf('Joint %d Comparison', i), 'NumberTitle', 'off');
 
-            % 1. Joint Position
+            % 1. Joint Position (Displays the single legend for the figure)
             subplot(numSubplots, 1, 1);
             hold on;
-            plot(trajTimes, q1(i, :), 'Color', color1, 'LineStyle', style1, 'LineWidth', 1.5);
+            hPos1 = plot(trajTimes, q1(i, :), 'Color', color1, 'LineStyle', style1, 'LineWidth', 1.5);
             if ~sharedQ
-                plot(trajTimes, q2(i, :), 'Color', color2, 'LineStyle', style2, 'LineWidth', 1.5);
-                legend(labels{1}, labels{2});
+                hPos2 = plot(trajTimes, q2(i, :), 'Color', color2, 'LineStyle', style2, 'LineWidth', 1.5);
+                legend([hPos1, hPos2], labels{1}, labels{2}, 'Location', 'best', 'AutoUpdate', 'off');
             else
-                legend('Joint Position');
+                legend(hPos1, 'Joint Position', 'Location', 'best', 'AutoUpdate', 'off');
             end
             for wIdx = 1:numWaypoints
-                xline(waypointTimes(wIdx), 'k--');
+                xline(waypointTimes(wIdx), 'k--', 'HandleVisibility', 'off');
             end
             if nargin >= 5 && ~isempty(jointWaypoints)
-                plot(waypointTimes, jointWaypoints(i, :), 'ro', 'MarkerSize', 4);
+                if iscell(jointWaypoints)
+                    if ~isempty(jointWaypoints{1})
+                        plot(waypointTimes, jointWaypoints{1}(i, :), 'bo', 'MarkerSize', 5, 'LineWidth', 1.2, 'HandleVisibility', 'off');
+                    end
+                    if numel(jointWaypoints) >= 2 && ~isempty(jointWaypoints{2})
+                        plot(waypointTimes, jointWaypoints{2}(i, :), 'ro', 'MarkerSize', 5, 'LineWidth', 1.2, 'HandleVisibility', 'off');
+                    end
+                else
+                    plot(waypointTimes, jointWaypoints(i, :), 'ro', 'MarkerSize', 4, 'HandleVisibility', 'off');
+                end
             end
             title(['Joint ', num2str(i), titleSuffix, ' Position']);
             xlabel('Time (s)');
@@ -114,12 +123,11 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
             plot(trajTimes, qd1(i, :), 'Color', color1, 'LineStyle', style1, 'LineWidth', 1.5);
             plot(trajTimes, qd2(i, :), 'Color', color2, 'LineStyle', style2, 'LineWidth', 1.5);
             for wIdx = 1:numWaypoints
-                xline(waypointTimes(wIdx), 'k--');
+                xline(waypointTimes(wIdx), 'k--', 'HandleVisibility', 'off');
             end
             title(['Joint ', num2str(i), titleSuffix, ' Velocity']);
             xlabel('Time (s)');
             ylabel('Velocity (rad/s)');
-            legend(labels{1}, labels{2});
             grid on;
 
             % 3. Joint Acceleration
@@ -128,12 +136,11 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
             plot(trajTimes, qdd1(i, :), 'Color', color1, 'LineStyle', style1, 'LineWidth', 1.5);
             plot(trajTimes, qdd2(i, :), 'Color', color2, 'LineStyle', style2, 'LineWidth', 1.5);
             for wIdx = 1:numWaypoints
-                xline(waypointTimes(wIdx), 'k--');
+                xline(waypointTimes(wIdx), 'k--', 'HandleVisibility', 'off');
             end
             title(['Joint ', num2str(i), titleSuffix, ' Acceleration']);
             xlabel('Time (s)');
             ylabel('Acceleration (rad/s^2)');
-            legend(labels{1}, labels{2});
             grid on;
 
             % 4. Joint Jerk (if provided)
@@ -143,12 +150,9 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
                 plot(trajTimes, qddd1(i, :), 'Color', color1, 'LineStyle', style1, 'LineWidth', 1.5);
                 if ~isempty(qddd2)
                     plot(trajTimes, qddd2(i, :), 'Color', color2, 'LineStyle', style2, 'LineWidth', 1.5);
-                    legend(labels{1}, labels{2});
-                else
-                    legend(labels{1});
                 end
                 for wIdx = 1:numWaypoints
-                    xline(waypointTimes(wIdx), 'k--');
+                    xline(waypointTimes(wIdx), 'k--', 'HandleVisibility', 'off');
                 end
                 title(['Joint ', num2str(i), titleSuffix, ' Jerk']);
                 xlabel('Time (s)');
@@ -185,18 +189,18 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
         for i = 1:numJoints
             figure;
 
-            % Plot joint position
+            % Plot joint position (Single legend on first subplot)
             subplot(numSubplots, 1, 1);
             hold on;
-            plot(trajTimes, q(i, :), 'Color', lineColor, 'LineWidth', 1.5);
+            hTraj = plot(trajTimes, q(i, :), 'Color', lineColor, 'LineWidth', 1.5);
             for wIdx = 1:numWaypoints
-                xline(waypointTimes(wIdx), 'k--');
+                xline(waypointTimes(wIdx), 'k--', 'HandleVisibility', 'off');
             end
             if nargin >= 5 && ~isempty(jointWaypoints)
-                plot(waypointTimes, jointWaypoints(i, :), 'ro', 'MarkerSize', 2);
-                legend('Trajectory', 'Waypoints');
+                hWp = plot(waypointTimes, jointWaypoints(i, :), 'ro', 'MarkerSize', 4);
+                legend([hTraj, hWp], 'Trajectory', 'Waypoints', 'AutoUpdate', 'off');
             else
-                legend('Trajectory');
+                legend(hTraj, 'Trajectory', 'AutoUpdate', 'off');
             end
             title(['Joint ', num2str(i), titleSuffix, ' Position']);
             xlabel('Time (s)');
@@ -208,12 +212,11 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
             hold on;
             plot(trajTimes, qd(i, :), 'Color', lineColor, 'LineWidth', 1.5);
             for wIdx = 1:numWaypoints
-                xline(waypointTimes(wIdx), 'k--');
+                xline(waypointTimes(wIdx), 'k--', 'HandleVisibility', 'off');
             end
             title(['Joint ', num2str(i), titleSuffix, ' Velocity']);
             xlabel('Time (s)');
             ylabel('Velocity (rad/s)');
-            legend('Trajectory');
             grid on;
 
             % Plot joint acceleration
@@ -221,12 +224,11 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
             hold on;
             plot(trajTimes, qdd(i, :), 'Color', lineColor, 'LineWidth', 1.5);
             for wIdx = 1:numWaypoints
-                xline(waypointTimes(wIdx), 'k--');
+                xline(waypointTimes(wIdx), 'k--', 'HandleVisibility', 'off');
             end
             title(['Joint ', num2str(i), titleSuffix, ' Acceleration']);
             xlabel('Time (s)');
             ylabel('Acceleration (rad/s^2)');
-            legend('Trajectory');
             grid on;
 
             % Plot joint jerk (if provided)
@@ -235,12 +237,11 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
                 hold on;
                 plot(trajTimes, qddd(i, :), 'Color', lineColor, 'LineWidth', 1.5);
                 for wIdx = 1:numWaypoints
-                    xline(waypointTimes(wIdx), 'k--');
+                    xline(waypointTimes(wIdx), 'k--', 'HandleVisibility', 'off');
                 end
                 title(['Joint ', num2str(i), titleSuffix, ' Jerk']);
                 xlabel('Time (s)');
                 ylabel('Jerk (rad/s^3)');
-                legend('Trajectory');
                 grid on;
             end
         end
