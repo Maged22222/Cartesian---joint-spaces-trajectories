@@ -79,8 +79,6 @@ end
     ikInitGuess, taskPos, trajTimes, waypoints, TrajPoints, angleThreshold);
 
 
-
-
 numSteps = numel(trajTimes);
 q = config_all';    % Joint positions
 numJoints = size(q, 1);
