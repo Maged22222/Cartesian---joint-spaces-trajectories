@@ -18,9 +18,7 @@ function plots(trajTimes, eePos, eeOrient, eeVel, eeAcc, qdd, numJoints, dt, way
 %   eeAcc     - 6 x N (or 6 x (N-2)) matrix of task accelerations (1:3 angular, 4:6 linear)
 %   qdd       - (Optional) numJoints x N matrix of joint accelerations (kept for signature compatibility)
 %   numJoints - (Optional) Number of joints
-%   dt        - (Optional) Time step for jerk differentiation (default: mean(diff(trajTimes)) or 0.02)
-%   waypoints - (Optional) 3 x M matrix of waypoints to plot 3D trajectory
-%   title3D   - (Optional) Title for the 3D trajectory plot or string / logical indicating includeOrientation
+%  
 
     numSteps = numel(trajTimes);
 
