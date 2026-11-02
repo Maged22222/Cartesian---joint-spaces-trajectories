@@ -92,21 +92,22 @@ jointVelocities = [zeros(numJoints, 1), diff(q, 1, 2) / ts];
 jointAccelerations = [zeros(numJoints, 1), diff(jointVelocities, 1, 2) / ts];
 jointJerks = [zeros(numJoints, 1), diff(jointAccelerations, 1, 2) / ts];
 
-%% Joint-Space Plots (Numerical Differentiation)
-plotJointSpaceTrajectories(trajTimes, q, jointVelocities, jointAccelerations, [], waypointTimes, 'Numerical Differentiation', 'b', jointJerks);
 %% Compute Joint Velocities and Accelerations Using Inverse Jacobian and check singularity
 eeVel = [taskOrientVel; taskVel];
 eeAcc = [taskOrientAcc; taskAcc];
 [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel, eeAcc, eeName);
 
-
 % Compute joint jerks from Inverse Jacobian accelerations
 jointJerksJac = [zeros(numJoints, 1), diff(qdd, 1, 2) / ts];
 
-%% Joint-Space Plots (Inverse Jacobian)
-plotJointSpaceTrajectories(trajTimes, q, qd, qdd, [], waypointTimes, 'Inverse Jacobian', 'r', jointJerksJac);
+%% Joint-Space Comparison Plots (Numerical Differentiation vs Inverse Jacobian)
+labels = {'Numerical Differentiation', 'Inverse Jacobian'};
+plotJointSpaceTrajectories(trajTimes, q, ...
+    {jointVelocities, qd}, ...
+    {jointAccelerations, qdd}, ...
+    [], waypointTimes, labels, {'b', 'r'}, ...
+    {jointJerks, jointJerksJac});
 
 
-%% Plot Task-Space Trajectory (Position, Velocity, Acceleration, Orientation)
-plotTaskSpaceTrajectories(trajTimes, taskPos, taskVel, taskAcc, ...
-    taskOrientWaypoints, taskOrientVel, taskOrientAcc);
+%% Plot Task-Space Trajectory (Position, Orientation, Velocity, Acceleration, Jerk, 3D Path)
+plots(trajTimes, taskPos, taskOrientWaypoints, eeVel, eeAcc, qdd, numJoints, ts, waypoints, 'Cartesian Task-Space Trajectory');
