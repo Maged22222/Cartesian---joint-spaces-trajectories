@@ -31,18 +31,18 @@ function computeAndPlotTrajectorieswWithJacobianInCartisainSpace(puma, trajTimes
         % Compute joint velocities using the inverse Jacobian
         qd(:, idx) = pinv(J) * eeVel; % Use pseudo-inverse in case J is not square
 
-        % Compute joint accelerations using the inverse Jacobian
-        if idx > 1
-            % Approximate dJ/dt using finite differences
-            J_prev = geometricJacobian(puma, q(:, idx-1)', eeName);
-            dJdt = (J - J_prev) / (trajTimes(idx) - trajTimes(idx-1));
+        % Time derivative of the Jacobian along the motion: dJ/dt = sum_i (dJ/dq_i) * qd_i
+        % Computed as a central directional derivative in the direction of qd
+        % (exact up to O(h^2), valid for all time steps including idx = 1, independent of dt).
+        h = 1e-6;
+        currentJointVel = qd(:, idx)';
+        Jplus  = geometricJacobian(puma, config + h * currentJointVel, eeName);
+        Jminus = geometricJacobian(puma, config - h * currentJointVel, eeName);
+        Jdot = (Jplus - Jminus) / (2 * h);
 
-            % Compute joint accelerations
-            qdd(:, idx) = pinv(J) * eeAcc - pinv(J) * dJdt * qd(:, idx-1);
-        else
-            % For the first time step, assume zero acceleration
-            qdd(:, idx) = zeros(numJoints, 1);
-        end
+        % Compute joint accelerations using inverse Jacobian relation:
+        % eeAcc = J*qdd + Jdot*qd  =>  qdd = pinv(J) * (eeAcc - Jdot * qd(:, idx))
+        qdd(:, idx) = pinv(J) * (eeAcc - Jdot * qd(:, idx));
     end
 
     % Plot Joint-Space Trajectory

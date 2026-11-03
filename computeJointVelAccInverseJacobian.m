@@ -56,18 +56,17 @@ function [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel
         % Compute joint velocities using the inverse Jacobian
         qd(:, idx) = pinv(J) * eeVel(:, idx);
 
-        % Compute joint accelerations using the inverse Jacobian
-        if idx > 1
-            % Approximate dJ/dt using finite differences
-            J_prev = geometricJacobian(puma, q(:, idx-1)', eeName);
-            dt = trajTimes(idx) - trajTimes(idx-1);
-            dJdt = (J - J_prev) / dt;
+        % Time derivative of the Jacobian along the motion: dJ/dt = sum_i (dJ/dq_i) * qd_i
+        % Computed as a central directional derivative in the direction of qd
+        % (exact up to O(h^2), valid for all time steps including idx = 1, independent of dt).
+        h = 1e-6;
+        currentJointVel = qd(:, idx)';
+        Jplus  = geometricJacobian(puma, config + h * currentJointVel, eeName);
+        Jminus = geometricJacobian(puma, config - h * currentJointVel, eeName);
+        Jdot = (Jplus - Jminus) / (2 * h);
 
-            % Compute joint accelerations
-            qdd(:, idx) = pinv(J) * eeAcc(:, idx) - pinv(J) * dJdt * qd(:, idx-1);
-        else
-            % For the first time step, assume zero acceleration
-            qdd(:, idx) = zeros(numJoints, 1);
-        end
+        % Compute joint accelerations using inverse Jacobian relation:
+        % eeAcc = J*qdd + Jdot*qd  =>  qdd = pinv(J) * (eeAcc - Jdot * qd)
+        qdd(:, idx) = pinv(J) * (eeAcc(:, idx) - Jdot * qd(:, idx));
     end
 end

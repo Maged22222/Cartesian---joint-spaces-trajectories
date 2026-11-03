@@ -58,8 +58,20 @@ function [eePos, eeOrient, eeVel, eeAcc] = computeTaskSpaceWithJacobian(puma, q,
         eeVel(1:3, idx) = J(1:3, :) * jointVel';
         eeVel(4:6, idx) = J(4:6, :) * jointVel';
 
-        % Compute task-space acceleration: eeAcc (Angular + Linear)
-        eeAcc(1:3, idx) = J(1:3, :) * jointAcc';
-        eeAcc(4:6, idx) = J(4:6, :) * jointAcc';
+        % Time derivative of the Jacobian along the motion: dJ/dt = sum_i (dJ/dq_i) * qd_i
+        % Computed as a central directional derivative of J in the direction of qd
+        % (exact up to O(h^2), independent of the trajectory sample time).
+        h = 1e-6;
+        Jplus  = geometricJacobian(puma, config + h * jointVel, eeName);
+        Jminus = geometricJacobian(puma, config - h * jointVel, eeName);
+        Jdot = (Jplus - Jminus) / (2 * h);
+
+        % Compute task-space acceleration: eeAcc = J*qdd + Jdot*qd (Angular + Linear)
+        % NOTE: the Jdot*qd term (centripetal/Coriolis part) is required; omitting it
+        % makes the Jacobian acceleration disagree with numerical differentiation.
+        eeAcc(:, idx) = J * jointAcc' + Jdot * jointVel';
     end
+
+    % Remove +/-pi wrapping of Euler angles (same convention as the numerical method)
+    eeOrient = unwrap(eeOrient, [], 2);
 end

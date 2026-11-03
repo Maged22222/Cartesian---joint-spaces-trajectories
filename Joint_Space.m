@@ -2,7 +2,7 @@
 clear, clc, close all
 %trajType = input('Enter trajectory type (trap, cubic, quintic, bspline): ', 's');
 % Define waypoints and times (example values)
-waypoints = [0.6 0.5 0 -0.8; -0.2 0 -0.25 -0.1; 0.6 0.3 1 0.65]; % Example waypoints
+waypoints = [0.6 0.5 0 -0.8; -0.2 -0.3 -0.25 -0.1; 0.6 0.3 1 0.65]; % Example waypoints
 waypoints(:,4)=waypoints(:,1);
 orientations = [0 0 0; pi/6 -pi/12 pi/8; pi/4 pi/12 -pi/8; pi/3 0 pi/4];
 waypointTimes = [0 1 2 3]; % Time at each waypoint
@@ -59,11 +59,12 @@ plot3(waypoints(1,:),waypoints(2,:),waypoints(3,:),'ro','LineWidth',2);
 
 %% Solve IK for all waypoints and includeOrientation = false
 includeOrientation = false; % Set this to use zero vs. nonzero orientations
-ikWeights = [1 1 1 1 1 1];
+ikWeights = [0 0 0 1 1 1];
 numWaypoints = size(waypoints,2);
 numJoints = numel(puma.homeConfiguration);
 
 [jointWaypoints, ikInitGuess] = computeJointWaypoints(ik, eeName, waypoints, orientations, includeOrientation, ikWeights, ikInitGuess);
+jointWaypoints_noOrient = jointWaypoints;
 
 %% Generate trajectory on joint space
 
@@ -92,6 +93,7 @@ plots(trajTimes, eePositions, eeOrientations, eeVel_num, eeAcc_num, qdd, numJoin
 includeOrientation = true;
 ikWeights = [1 1 1 1 1 1];
 [jointWaypoints, ikInitGuess] = computeJointWaypoints(ik, eeName, waypoints, orientations, includeOrientation, ikWeights, ikInitGuess);
+jointWaypoints_orient = jointWaypoints;
 [qf, qfd, qfdd] = interpolateJointTrajectory(trajType, jointWaypoints, waypointTimes, trajTimes, waypointAccelTimes, angleThreshold);                          
 % Compute task-space kinematics using numerical differentiation (includeOrientation = true)
 [eePositions2, eeOrientations2, eeVelocities2, eeAngularVelocities2, ...
@@ -104,8 +106,11 @@ plots(trajTimes, eePositions2, eeOrientations2, eeVel_num2, eeAcc_num2, qfdd, nu
 %% results for joint space and task space
 plotJointComparison(trajTimes, q, qf, waypointTimes);
 
-%% results for joint space for includeOrientation = false
-plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypointTimes, 'includeOrientation = false', 'b');
+%% Joint-Space Comparison: includeOrientation = false vs includeOrientation = true
+labelsJoint = {'includeOrientation = false', 'includeOrientation = true'};
+jointJerks_noOrient = [zeros(numJoints, 1), diff(qdd, 1, 2) / ts];
+jointJerks_orient = [zeros(numJoints, 1), diff(qfdd, 1, 2) / ts];
 
-%% results for joint space for includeOrientation = true
-plotJointSpaceTrajectories(trajTimes, qf, qfd, qfdd, jointWaypoints, waypointTimes, 'includeOrientation = true', 'r');
+plotJointSpaceTrajectories(trajTimes, {q, qf}, {qd, qfd}, {qdd, qfdd}, ...
+    {jointWaypoints_noOrient, jointWaypoints_orient}, waypointTimes, ...
+    labelsJoint, {'b', 'r'}, {jointJerks_noOrient, jointJerks_orient});
