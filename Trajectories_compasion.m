@@ -125,10 +125,7 @@ view(3);
 plotJointComparison(trajTimes, q_joint, q_cart, waypointTimes, ...
     {'Joint-Space Trajectory', 'Cartesian-Space Trajectory'});
 
-%% 8. Joint-Space Profiles for Joint-Space Trajectory
-jointJerks_joint = [zeros(numJoints, 1), diff(qdd_joint, 1, 2) / ts];
-plotJointSpaceTrajectories(trajTimes, q_joint, qd_joint, qdd_joint, jointWaypoints, ...
-    waypointTimes, 'Joint-Space Trajectory', 'b', jointJerks_joint);
+
 
 %% 9. Joint-Space Profiles for Cartesian-Space Trajectory (Numerical Diff vs Inverse Jacobian)
 % Numerical Differentiation
@@ -155,11 +152,7 @@ plotJointSpaceTrajectories(trajTimes, q_cart, ...
 plots(trajTimes, eePos_joint, eeOrient_joint, eeVel_joint, eeAcc_joint, qdd_joint, ...
     numJoints, ts, waypoints, 'Joint-Space Task Trajectory (Jacobian)');
 
-% Numerical Differentiation Task-Space
-eeVel_joint_num_all = [eeAngularVel_joint_num; eeVel_joint_num];
-eeAcc_joint_num_all = [eeAngularAcc_joint_num; eeAcc_joint_num];
-plots(trajTimes, eePos_joint_num, eeOrient_joint_num, eeVel_joint_num_all, eeAcc_joint_num_all, ...
-    qdd_joint, numJoints, ts, waypoints, 'Joint-Space Task Trajectory (Numerical Diff)');
+
 
 %% 11. Task-Space Plots (Cartesian-Space Trajectory)
 plots(trajTimes, taskPos, taskOrientWaypoints, eeVel_cart, eeAcc_cart, qdd_cart_jac, ...

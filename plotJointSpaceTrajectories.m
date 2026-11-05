@@ -85,18 +85,14 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
         end
 
         for i = 1:numJoints
-            figure('Name', sprintf('Joint %d Comparison', i), 'NumberTitle', 'off');
+            figure('Name', sprintf('Joint %d: %s vs %s', i, labels{1}, labels{2}), 'NumberTitle', 'off');
 
-            % 1. Joint Position (Displays the single legend for the figure)
+            % 1. Joint Position (Displays the comparison legend for the figure)
             subplot(numSubplots, 1, 1);
             hold on;
             hPos1 = plot(trajTimes, q1(i, :), 'Color', color1, 'LineStyle', style1, 'LineWidth', 1.5);
-            if ~sharedQ
-                hPos2 = plot(trajTimes, q2(i, :), 'Color', color2, 'LineStyle', style2, 'LineWidth', 1.5);
-                legend([hPos1, hPos2], labels{1}, labels{2}, 'Location', 'best', 'AutoUpdate', 'off');
-            else
-                legend(hPos1, 'Joint Position', 'Location', 'best', 'AutoUpdate', 'off');
-            end
+            hPos2 = plot(trajTimes, q2(i, :), 'Color', color2, 'LineStyle', style2, 'LineWidth', 1.5);
+            legend([hPos1, hPos2], labels{1}, labels{2}, 'Location', 'best', 'AutoUpdate', 'off');
             for wIdx = 1:numWaypoints
                 xline(waypointTimes(wIdx), 'k--', 'HandleVisibility', 'off');
             end

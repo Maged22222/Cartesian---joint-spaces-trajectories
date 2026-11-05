@@ -21,26 +21,32 @@ velocityBoundaryCondition = [0 0 0 0;   % Vx at waypoints
 accelerationBoundaryCondition = [0 0 0 0;   % Ax at waypoints
                                  0 0 0 0;   % Ay at waypoints
                                  0 0 0 0];  % Az at waypoints
-taskOrientWaypoints =zeros(3,numel(trajTimes));
-taskOrientVel = zeros(3, numel(trajTimes)); % Angular velocity for all time steps
-taskOrientAcc = zeros(3, numel(trajTimes)); % Angular acceleration for all time
+% Define waypoint orientations (Roll, Pitch, Yaw)
+orientations = [0 0 0; pi/6 -pi/12 pi/8; pi/4 pi/12 -pi/8; pi/3 0 pi/4];
+
+% Orientation trajectory type: 'trajType' (inherits trajType e.g. quintic/cubic) or 'rottraj' (SO(3) quaternion trajectory)
+rentaiontrajectorytype = ' rottraj';
 
 % Define home joint angles (example values)
 jointAnglesHome = [0 0 0 0 0 0]; % Home configuration for PUMA
 
 % Load PUMA robot model
 puma = loadrobot('puma560', 'DataFormat', 'row');
-
-% Define end effector name
 eeName = 'link7';
+numJoints = numel(puma.homeConfiguration);
+
+% Update joint limits to [-pi, pi] for all joints
+for idx = 1:numJoints
+    puma.Bodies{idx}.Joint.PositionLimits = [-pi, pi];
+end
 
 % Define threshold for small angles
 angleThreshold = 0.000001;
-% Define IK
-ik = inverseKinematics('RigidBodyTree',puma);
+
+% Define IK solver (after joint limits are set)
+ik = inverseKinematics('RigidBodyTree', puma);
 ikWeights = [0 0 0 1 1 1];
-ikInitGuess =jointAnglesHome;
-numJoints = numel(puma.homeConfiguration);
+ikInitGuess = jointAnglesHome;
 
 % Set up plot
 plotMode = 1; % 0 = None, 1 = Trajectory, 2 = Coordinate Frames
@@ -52,16 +58,12 @@ if plotMode == 1
 end
 plot3(waypoints(1,:),waypoints(2,:),waypoints(3,:),'ro','LineWidth',2);
 
-%% Changing Joint Limits
-for idx = 1:numJoints
- 
-  puma.Bodies{idx}.Joint.PositionLimits = [-pi, pi];
-end
 
-%% Generate trajectory
-% Cartesian Motion only
-[taskPos, taskVel, taskAcc] = interpolateCartesianTrajectory(trajType, waypoints, waypointTimes, trajTimes, ...
-    waypointAccelTimes, velocityBoundaryCondition, accelerationBoundaryCondition);
+%% Generate Cartesian Trajectory (Position + Commanded Orientation)
+[taskPos, taskVel, taskAcc, cmdOrient, ~, ~] = ...
+    interpolateCartesianTrajectory(trajType, waypoints, waypointTimes, trajTimes, ...
+    waypointAccelTimes, velocityBoundaryCondition, accelerationBoundaryCondition, ...
+    orientations, rentaiontrajectorytype);
 
 % Show the full trajectory with the rigid body tree
 if plotMode == 1
@@ -76,14 +78,15 @@ if ~exist('TrajPoints', 'var')
     TrajPoints = [];
 end
 [config_all, ikInitGuess] = followCartesianTrajectory(puma, eeName, ik, ikWeights, ...
-    ikInitGuess, taskPos, trajTimes, waypoints, TrajPoints, angleThreshold);
+    ikInitGuess, taskPos, trajTimes, waypoints, TrajPoints, angleThreshold, [], cmdOrient);
 
 
 numSteps = numel(trajTimes);
-q = config_all';    % Joint positions
-numJoints = size(q, 1);
-qd = zeros(numJoints, numSteps);   % Joint velocities
-qdd = zeros(numJoints, numSteps);  % Joint accelerations
+q = config_all';  
+
+%% Compute Task-Space Orientation from q using Forward Kinematics
+[~, taskOrientWaypoints, ~, taskOrientVel, ~, taskOrientAcc] = ...
+    computeTaskSpaceNumericalDifferentiation(puma, q, trajTimes, eeName, angleThreshold);
 
 % Compute joint velocities, accelerations, and jerks (numerical differentiation)
 jointVelocities = [zeros(numJoints, 1), diff(q, 1, 2) / ts];
@@ -108,4 +111,4 @@ plotJointSpaceTrajectories(trajTimes, q, ...
 
 
 %% Plot Task-Space Trajectory (Position, Orientation, Velocity, Acceleration, Jerk, 3D Path)
-plots(trajTimes, taskPos, taskOrientWaypoints, eeVel, eeAcc, qdd, numJoints, ts, waypoints, 'Cartesian Task-Space Trajectory');
+plots(trajTimes, taskPos, taskOrientWaypoints, eeVel, eeAcc, qdd, numJoints, ts, waypoints, '');

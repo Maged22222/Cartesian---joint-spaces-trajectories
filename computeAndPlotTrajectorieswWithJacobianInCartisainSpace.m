@@ -17,19 +17,19 @@ function computeAndPlotTrajectorieswWithJacobianInCartisainSpace(puma, trajTimes
         J = geometricJacobian(puma, config, eeName);
 
         % Check for singularity
-        if cond(J) > 1e6
-            warning('Jacobian is near-singular at time step %d', idx);
-            qd(:, idx) = zeros(numJoints, 1);
-            qdd(:, idx) = zeros(numJoints, 1);
-            continue;
-        end
-
         % Extract task-space velocity and acceleration at this time step
         eeVel = [taskOrientVel(:, idx); taskVel(:, idx)]; % Angular + Linear velocity
         eeAcc = [taskOrientAcc(:, idx); taskAcc(:, idx)]; % Angular + Linear acceleration
 
-        % Compute joint velocities using the inverse Jacobian
-        qd(:, idx) = pinv(J) * eeVel; % Use pseudo-inverse in case J is not square
+        % SVD-based Damped Least Squares (DLS): J^* = V * diag(s / (s^2 + lambda^2)) * U'
+        lambda = 0.05;
+        [U, S, V] = svd(J, 'econ');
+        s = diag(S);
+        s_dls = s ./ (s.^2 + lambda^2);
+        J_inv = V * diag(s_dls) * U';
+
+        % Compute joint velocities using the DLS inverse Jacobian
+        qd(:, idx) = J_inv * eeVel;
 
         % Time derivative of the Jacobian along the motion: dJ/dt = sum_i (dJ/dq_i) * qd_i
         % Computed as a central directional derivative in the direction of qd
@@ -41,8 +41,8 @@ function computeAndPlotTrajectorieswWithJacobianInCartisainSpace(puma, trajTimes
         Jdot = (Jplus - Jminus) / (2 * h);
 
         % Compute joint accelerations using inverse Jacobian relation:
-        % eeAcc = J*qdd + Jdot*qd  =>  qdd = pinv(J) * (eeAcc - Jdot * qd(:, idx))
-        qdd(:, idx) = pinv(J) * (eeAcc - Jdot * qd(:, idx));
+        % eeAcc = J*qdd + Jdot*qd  =>  qdd = J_inv * (eeAcc - Jdot * qd(:, idx))
+        qdd(:, idx) = J_inv * (eeAcc - Jdot * qd(:, idx));
     end
 
     % Plot Joint-Space Trajectory

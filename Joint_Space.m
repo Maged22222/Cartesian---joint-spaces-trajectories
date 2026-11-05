@@ -1,7 +1,7 @@
 %% Setup
 clear, clc, close all
 %trajType = input('Enter trajectory type (trap, cubic, quintic, bspline): ', 's');
-% Define waypoints and times (example values)
+% Define waypoints 
 waypoints = [0.6 0.5 0 -0.8; -0.2 -0.3 -0.25 -0.1; 0.6 0.3 1 0.65]; % Example waypoints
 waypoints(:,4)=waypoints(:,1);
 orientations = [0 0 0; pi/6 -pi/12 pi/8; pi/4 pi/12 -pi/8; pi/3 0 pi/4];

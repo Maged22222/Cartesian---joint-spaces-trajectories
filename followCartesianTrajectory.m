@@ -1,11 +1,13 @@
-function [config_all, ikInitGuess] = followCartesianTrajectory(puma, eeName, ik, ikWeights, ikInitGuess, taskPos, trajTimes, waypoints, TrajPoints, angleThreshold, tolerance)
+function [config_all, ikInitGuess] = followCartesianTrajectory(puma, eeName, ik, ikWeights, ikInitGuess, taskPos, trajTimes, waypoints, TrajPoints, angleThreshold, tolerance, taskOrient)
 % FOLLOWCARTESIANTRAJECTORY Solves inverse kinematics (IK) step-by-step along
 % a Cartesian trajectory and animates the robot following the path.
+% Supports both position-only and 6-DOF (position + orientation) Cartesian tracking.
 %
 % Syntax:
 %   config_all = followCartesianTrajectory(puma, eeName, ik, ikWeights, ikInitGuess, taskPos, trajTimes, waypoints)
 %   config_all = followCartesianTrajectory(puma, eeName, ik, ikWeights, ikInitGuess, taskPos, trajTimes, waypoints, TrajPoints)
 %   config_all = followCartesianTrajectory(puma, eeName, ik, ikWeights, ikInitGuess, taskPos, trajTimes, waypoints, TrajPoints, angleThreshold, tolerance)
+%   config_all = followCartesianTrajectory(puma, eeName, ik, ikWeights, ikInitGuess, taskPos, trajTimes, waypoints, TrajPoints, angleThreshold, tolerance, taskOrient)
 %   [config_all, ikInitGuess] = followCartesianTrajectory(...)
 %
 % Inputs:
@@ -20,6 +22,7 @@ function [config_all, ikInitGuess] = followCartesianTrajectory(puma, eeName, ik,
 %   TrajPoints     - (Optional) Line handle for traced path plot
 %   angleThreshold - (Optional) Absolute threshold below which joint angles are set to 0 (default: 1e-6)
 %   tolerance      - (Optional) Distance tolerance to match waypoints (default: 1e-3)
+%   taskOrient     - (Optional) 3xN matrix of Euler angles [roll; pitch; yaw] or Mx3 waypoint orientations
 %
 % Outputs:
 %   config_all     - N x numJoints matrix of joint configurations over time
@@ -33,31 +36,43 @@ function [config_all, ikInitGuess] = followCartesianTrajectory(puma, eeName, ik,
         angleThreshold = 1e-6;
     end
 
-    hasTrajPoints = (nargin >= 9 && ~isempty(TrajPoints) && isgraphics(TrajPoints));
-
     numSteps = numel(trajTimes);
     numJoints = numel(puma.homeConfiguration);
+
+    % Handle orientation input (auto-interpolate if waypoints passed)
+    hasOrient = (nargin >= 12 && ~isempty(taskOrient));
+    if hasOrient
+        if size(taskOrient, 1) ~= 3 && size(taskOrient, 2) == 3
+            taskOrient = taskOrient';
+        end
+        if size(taskOrient, 2) ~= numSteps
+            % Waypoint orientations passed -> interpolate across trajTimes
+            wpTimes = linspace(trajTimes(1), trajTimes(end), size(taskOrient, 2));
+            taskOrient = quinticpolytraj(taskOrient, wpTimes, trajTimes);
+        end
+    end
+
+    hasTrajPoints = (nargin >= 9 && ~isempty(TrajPoints) && isgraphics(TrajPoints));
+
     config_all = zeros(numSteps, numJoints);
     config = ikInitGuess;
 
     for idx = 1:numSteps
-        % Solve IK
-        tgtPose = trvec2tform(taskPos(:, idx)');
+        % Solve IK with position and optional orientation
+        if hasOrient
+            tgtPose = trvec2tform(taskPos(:, idx)') * eul2tform(taskOrient(:, idx)');
+        else
+            tgtPose = trvec2tform(taskPos(:, idx)');
+        end
         [config, info] = ik(eeName, tgtPose, ikWeights, ikInitGuess);
 
-        % Check IK solver status
-        if strcmp(info.Status, 'success')
-            ikInitGuess = config;
-            % Set small angles to zero
-            config(abs(config) < angleThreshold) = 0;
-            config_all(idx, :) = config;
-        else
+        % Update initial guess for continuous tracking along trajectory
+        ikInitGuess = config;
+        config(abs(config) < angleThreshold) = 0;
+        config_all(idx, :) = config;
+
+        if ~strcmp(info.Status, 'success')
             warning('IK solver failed at time step %d', idx);
-            if idx > 1
-                config_all(idx, :) = config_all(idx - 1, :);
-            else
-                config_all(idx, :) = config;
-            end
         end
 
         eePos = taskPos(:, idx)';

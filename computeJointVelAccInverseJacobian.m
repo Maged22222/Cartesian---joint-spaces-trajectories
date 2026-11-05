@@ -1,11 +1,12 @@
-function [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel, eeAcc, eeName, condThreshold)
+function [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel, eeAcc, eeName, lambda, condThreshold)
 % COMPUTEJOINTVELACCINVERSEJACOBIAN Computes joint velocities (qd) and 
 % accelerations (qdd) from task-space velocity and acceleration trajectories 
-% using the pseudo-inverse of the geometric Jacobian.
+% using Damped Least Squares (DLS) / pseudo-inverse of the geometric Jacobian.
 %
 % Syntax:
 %   [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel, eeAcc, eeName)
-%   [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel, eeAcc, eeName, condThreshold)
+%   [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel, eeAcc, eeName, lambda)
+%   [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel, eeAcc, eeName, lambda, condThreshold)
 %
 % Inputs:
 %   puma          - RigidBodyTree robot model (e.g., puma560)
@@ -14,13 +15,19 @@ function [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel
 %   eeVel         - 6 x numSteps (or 3 x numSteps) task-space velocity [angular; linear]
 %   eeAcc         - 6 x numSteps (or 3 x numSteps) task-space acceleration [angular; linear]
 %   eeName        - End-effector body name (e.g., 'link7')
+%   lambda        - (Optional) DLS damping factor for singularity robustness (default: 0.05).
+%                   Set lambda = 0 for standard un-damped pseudo-inverse.
 %   condThreshold - (Optional) Singularity condition number threshold (default: 1e6)
 %
 % Outputs:
 %   qd            - numJoints x numSteps matrix of joint velocities
 %   qdd           - numJoints x numSteps matrix of joint accelerations
 
-    if nargin < 7 || isempty(condThreshold)
+    if nargin < 7 || isempty(lambda)
+        lambda = 0.05; % Default DLS damping factor
+    end
+
+    if nargin < 8 || isempty(condThreshold)
         condThreshold = 1e6;
     end
 
@@ -45,16 +52,25 @@ function [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel
         % Compute Jacobian at the current configuration
         J = geometricJacobian(puma, config, eeName);
 
-        % Check for singularity
-        if cond(J) > condThreshold
-            warning('Jacobian is near-singular at time step %d (condition number = %.2e)', idx, cond(J));
-            qd(:, idx) = zeros(numJoints, 1);
-            qdd(:, idx) = zeros(numJoints, 1);
-            continue;
+        % Compute Jacobian inverse using Damped Least Squares (DLS) or pinv
+        if lambda > 0
+            % SVD-based Damped Least Squares: J^* = V * diag(s / (s^2 + lambda^2)) * U'
+            [U, S, V] = svd(J, 'econ');
+            s = diag(S);
+            s_dls = s ./ (s.^2 + lambda^2);
+            J_inv = V * diag(s_dls) * U';
+        else
+            if cond(J) > condThreshold
+                warning('Jacobian is near-singular at time step %d (condition number = %.2e)', idx, cond(J));
+                qd(:, idx) = zeros(numJoints, 1);
+                qdd(:, idx) = zeros(numJoints, 1);
+                continue;
+            end
+            J_inv = pinv(J);
         end
 
-        % Compute joint velocities using the inverse Jacobian
-        qd(:, idx) = pinv(J) * eeVel(:, idx);
+        % Compute joint velocities using the DLS inverse Jacobian
+        qd(:, idx) = J_inv * eeVel(:, idx);
 
         % Time derivative of the Jacobian along the motion: dJ/dt = sum_i (dJ/dq_i) * qd_i
         % Computed as a central directional derivative in the direction of qd
@@ -66,7 +82,7 @@ function [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel
         Jdot = (Jplus - Jminus) / (2 * h);
 
         % Compute joint accelerations using inverse Jacobian relation:
-        % eeAcc = J*qdd + Jdot*qd  =>  qdd = pinv(J) * (eeAcc - Jdot * qd)
-        qdd(:, idx) = pinv(J) * (eeAcc(:, idx) - Jdot * qd(:, idx));
+        % eeAcc = J*qdd + Jdot*qd  =>  qdd = J_inv * (eeAcc - Jdot * qd)
+        qdd(:, idx) = J_inv * (eeAcc(:, idx) - Jdot * qd(:, idx));
     end
 end
