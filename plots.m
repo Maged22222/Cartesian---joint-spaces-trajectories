@@ -53,15 +53,24 @@ function plots(trajTimes, eePos, eeOrient, eeVel, eeAcc, qdd, numJoints, dt, way
         end
     end
 
-    % Fallback: automatically check caller workspace for includeOrientation variable
+    % Fallback: automatically check caller workspace for activateorentation / includeOrientation
     if isempty(orientTag)
         try
-            incOrient = evalin('caller', 'includeOrientation');
-            if islogical(incOrient) || isnumeric(incOrient)
+            if evalin('caller', 'exist(''activateorentation'', ''var'')')
+                incOrient = evalin('caller', 'activateorentation');
+            elseif evalin('caller', 'exist(''activateOrientation'', ''var'')')
+                incOrient = evalin('caller', 'activateOrientation');
+            elseif evalin('caller', 'exist(''includeOrientation'', ''var'')')
+                incOrient = evalin('caller', 'includeOrientation');
+            else
+                incOrient = [];
+            end
+
+            if ~isempty(incOrient) && (islogical(incOrient) || isnumeric(incOrient))
                 if incOrient
-                    orientTag = ' (includeOrientation = true)';
+                    orientTag = ' (activateorentation = 1)';
                 else
-                    orientTag = ' (includeOrientation = false)';
+                    orientTag = ' (activateorentation = 0)';
                 end
             end
         catch

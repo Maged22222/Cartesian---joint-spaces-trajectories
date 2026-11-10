@@ -21,11 +21,18 @@ function computeAndPlotTrajectorieswWithJacobianInCartisainSpace(puma, trajTimes
         eeVel = [taskOrientVel(:, idx); taskVel(:, idx)]; % Angular + Linear velocity
         eeAcc = [taskOrientAcc(:, idx); taskAcc(:, idx)]; % Angular + Linear acceleration
 
-        % SVD-based Damped Least Squares (DLS): J^* = V * diag(s / (s^2 + lambda^2)) * U'
+        % SVD-based Adaptive Damped Least Squares (DLS)
         lambda = 0.05;
+        epsilon = 0.005;
         [U, S, V] = svd(J, 'econ');
         s = diag(S);
-        s_dls = s ./ (s.^2 + lambda^2);
+        sigma_min = min(s);
+        if sigma_min < epsilon
+            lam2 = lambda^2 * (1 - (sigma_min / epsilon)^2);
+        else
+            lam2 = 0; % Exact un-damped inversion
+        end
+        s_dls = s ./ (s.^2 + lam2);
         J_inv = V * diag(s_dls) * U';
 
         % Compute joint velocities using the DLS inverse Jacobian

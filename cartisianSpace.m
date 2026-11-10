@@ -1,6 +1,10 @@
 %% Setup
 clear, clc, close all
 
+%% User Settings
+activateorentation = 1; % 1 = Enable orientation tracking, 0 = Position tracking only
+activateOrientation = activateorentation; % Alias for convenience
+
 % Define waypoints and times (example values)
 waypoints = [0.6 0.5 0 -0.8; -0.2 -0.3 -0.25 -0.1; 0.6 0.3 1 0.65]; % Example waypoints
 waypoints(:,4)=waypoints(:,1);
@@ -25,7 +29,7 @@ accelerationBoundaryCondition = [0 0 0 0;   % Ax at waypoints
 orientations = [0 0 0; pi/6 -pi/12 pi/8; pi/4 pi/12 -pi/8; pi/3 0 pi/4];
 
 % Orientation trajectory type: 'trajType' (inherits trajType e.g. quintic/cubic) or 'rottraj' (SO(3) quaternion trajectory)
-rentaiontrajectorytype = ' rottraj';
+rentaiontrajectorytype = 'quintic';
 
 % Define home joint angles (example values)
 jointAnglesHome = [0 0 0 0 0 0]; % Home configuration for PUMA
@@ -45,7 +49,11 @@ angleThreshold = 0.000001;
 
 % Define IK solver (after joint limits are set)
 ik = inverseKinematics('RigidBodyTree', puma);
-ikWeights = [0 0 0 1 1 1];
+if activateorentation
+    ikWeights = [1 1 1 1 1 1]; % Track both orientation [1 1 1] and position [1 1 1]
+else
+    ikWeights = [0 0 0 1 1 1]; % Track position only [1 1 1], ignore orientation [0 0 0]
+end
 ikInitGuess = jointAnglesHome;
 
 % Set up plot
@@ -63,7 +71,7 @@ plot3(waypoints(1,:),waypoints(2,:),waypoints(3,:),'ro','LineWidth',2);
 [taskPos, taskVel, taskAcc, cmdOrient, ~, ~] = ...
     interpolateCartesianTrajectory(trajType, waypoints, waypointTimes, trajTimes, ...
     waypointAccelTimes, velocityBoundaryCondition, accelerationBoundaryCondition, ...
-    orientations, rentaiontrajectorytype);
+    orientations, rentaiontrajectorytype, activateorentation);
 
 % Show the full trajectory with the rigid body tree
 if plotMode == 1
@@ -78,7 +86,7 @@ if ~exist('TrajPoints', 'var')
     TrajPoints = [];
 end
 [config_all, ikInitGuess] = followCartesianTrajectory(puma, eeName, ik, ikWeights, ...
-    ikInitGuess, taskPos, trajTimes, waypoints, TrajPoints, angleThreshold, [], cmdOrient);
+    ikInitGuess, taskPos, trajTimes, waypoints, TrajPoints, angleThreshold, [], cmdOrient, activateorentation);
 
 
 numSteps = numel(trajTimes);

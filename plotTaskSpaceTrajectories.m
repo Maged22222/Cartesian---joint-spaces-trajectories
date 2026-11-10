@@ -70,8 +70,8 @@ function plotTaskSpaceTrajectories(trajTimes, taskPos, taskVel, taskAcc, taskOri
     grid on;
 
     % Plot Orientation (Roll, Pitch, Yaw) if provided
-    hasOrient = (nargin >= 5 && ~isempty(taskOrientPos));
-    if hasOrient
+    activateorentation = (nargin >= 5 && ~isempty(taskOrientPos));
+    if activateorentation
         figure;
 
         % Check if angular acceleration is provided to compute angular jerk
