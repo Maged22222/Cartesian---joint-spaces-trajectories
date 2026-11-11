@@ -38,6 +38,10 @@ function computeAndPlotTrajectorieswWithJacobianInCartisainSpace(puma, trajTimes
         % Compute joint velocities using the DLS inverse Jacobian
         qd(:, idx) = J_inv * eeVel;
 
+        % If abs(qd(:, idx)) < 0.1 is true, zero out qd and qdd for the same index
+        zeroVelMask = abs(qd(:, idx)) < 0.1;
+        qd(zeroVelMask, idx) = 0;
+
         % Time derivative of the Jacobian along the motion: dJ/dt = sum_i (dJ/dq_i) * qd_i
         % Computed as a central directional derivative in the direction of qd
         % (exact up to O(h^2), valid for all time steps including idx = 1, independent of dt).
@@ -50,7 +54,15 @@ function computeAndPlotTrajectorieswWithJacobianInCartisainSpace(puma, trajTimes
         % Compute joint accelerations using inverse Jacobian relation:
         % eeAcc = J*qdd + Jdot*qd  =>  qdd = J_inv * (eeAcc - Jdot * qd(:, idx))
         qdd(:, idx) = J_inv * (eeAcc - Jdot * qd(:, idx));
+
+        % Zero out joint acceleration if joint velocity was filtered to zero at this time step
+        qdd(zeroVelMask, idx) = 0;
     end
+
+    % Final threshold filtering
+    zeroVelAll = abs(qd) < 0.1;
+    qd(zeroVelAll) = 0;
+    qdd(zeroVelAll) = 0;
 
     % Plot Joint-Space Trajectory
     figure;
