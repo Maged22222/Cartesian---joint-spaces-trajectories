@@ -1,39 +1,7 @@
 function [eePositions, eeOrientations, eeVelocities, eeAngularVelocities, ...
           eeAccelerations, eeAngularAccelerations, trajTimesVel, trajTimesAcc] = ...
           computeTaskSpaceNumericalDifferentiation(puma, q, trajTimes, eeName, angleThreshold)
-% COMPUTETASKSPACENUMERICALDIFFERENTIATION Computes task-space positions, orientations,
-% and calculates velocities and accelerations via numerical differentiation of Forward Kinematics.
-%
-% Syntax:
-%   [eePositions, eeOrientations, eeVelocities, eeAngularVelocities, eeAccelerations, eeAngularAccelerations, trajTimesVel, trajTimesAcc] = ...
-%       computeTaskSpaceNumericalDifferentiation(puma, q, trajTimes, eeName)
-%   [eePositions, eeOrientations, eeVelocities, eeAngularVelocities, eeAccelerations, eeAngularAccelerations, trajTimesVel, trajTimesAcc] = ...
-%       computeTaskSpaceNumericalDifferentiation(puma, q, trajTimes, eeName, angleThreshold)
-%
-% Inputs:
-%   puma                    - RigidBodyTree robot model (e.g. puma560)
-%   q                       - numJoints x numTimeSteps matrix of joint angles
-%   trajTimes               - 1 x numTimeSteps vector of timestamps
-%   eeName                  - End-effector body name (e.g. 'link7')
-%   angleThreshold          - (Optional) Threshold to zero out small values (default: 0)
-%
-% Outputs:
-%   eePositions             - 3 x numTimeSteps end-effector positions (x, y, z)
-%   eeOrientations          - 3 x numTimeSteps end-effector Euler orientations (roll, pitch, yaw),
-%                             unwrapped in time (no artificial +/-pi jumps)
-%   eeVelocities            - 3 x numTimeSteps linear velocities (dx/dt, dy/dt, dz/dt)
-%   eeAngularVelocities     - 3 x numTimeSteps angular velocities omega (base frame),
-%                             obtained from dR/dt * R' (NOT from Euler-angle rates), so they
-%                             are directly comparable with geometricJacobian(1:3,:)*qd
-%   eeAccelerations         - 3 x numTimeSteps linear accelerations (d2x/dt2, ...)
-%   eeAngularAccelerations  - 3 x numTimeSteps angular accelerations (d omega/dt)
-%   trajTimesVel            - 1 x numTimeSteps time vector for velocities
-%   trajTimesAcc            - 1 x numTimeSteps time vector for accelerations
-%
-% Notes:
-%   Central differences (gradient) are used so that every derivative is
-%   time-aligned with trajTimes (forward differences shift the result by dt/2
-%   per differentiation order).
+
 
     if nargin < 5 || isempty(angleThreshold)
         angleThreshold = 0;

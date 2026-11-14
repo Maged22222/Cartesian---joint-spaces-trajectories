@@ -1,25 +1,5 @@
 function [eePos, eeOrient, eeVel, eeAcc] = computeTaskSpaceWithJacobian(puma, q, qd, qdd, eeName, angleThreshold)
-% COMPUTETASKSPACEWITHJACOBIAN Computes task-space position, orientation, 
-% velocity, and acceleration from joint-space trajectories using Forward
-% Kinematics and the Geometric Jacobian.
-%
-% Syntax:
-%   [eePos, eeOrient, eeVel, eeAcc] = computeTaskSpaceWithJacobian(puma, q, qd, qdd, eeName)
-%   [eePos, eeOrient, eeVel, eeAcc] = computeTaskSpaceWithJacobian(puma, q, qd, qdd, eeName, angleThreshold)
-%
-% Inputs:
-%   puma           - RigidBodyTree robot model (e.g., puma560)
-%   q              - numJoints x numSteps matrix of joint positions
-%   qd             - numJoints x numSteps matrix of joint velocities
-%   qdd            - numJoints x numSteps matrix of joint accelerations
-%   eeName         - End-effector body name (e.g., 'link7')
-%   angleThreshold - (Optional) Threshold to zero out small angles/values (default: 0)
-%
-% Outputs:
-%   eePos          - 3 x numSteps matrix of end-effector positions [x; y; z]
-%   eeOrient       - 3 x numSteps matrix of Euler orientations [roll; pitch; yaw]
-%   eeVel          - 6 x numSteps matrix of task velocities (rows 1:3 = angular, rows 4:6 = linear)
-%   eeAcc          - 6 x numSteps matrix of task accelerations (rows 1:3 = angular, rows 4:6 = linear)
+
 
     if nargin < 6 || isempty(angleThreshold)
         angleThreshold = 0;

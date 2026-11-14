@@ -1,8 +1,4 @@
 %% Cartesian Space Trajectory: ikWeights Comparison
-% This script compares Cartesian-space trajectory tracking between:
-%   1) ikWeights = [0 0 0 1 1 1] (Position Only tracking)
-%   2) ikWeights = [1 1 1 1 1 1] (Position + Orientation tracking)
-% Trajectories, joint velocities, accelerations, and jerks are compared.
 
 clear, clc, close all
 

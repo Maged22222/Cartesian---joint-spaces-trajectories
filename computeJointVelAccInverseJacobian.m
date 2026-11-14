@@ -1,29 +1,5 @@
 function [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel, eeAcc, eeName, lambda, condThreshold, velThreshold)
-% COMPUTEJOINTVELACCINVERSEJACOBIAN Computes joint velocities (qd) and 
-% accelerations (qdd) from task-space velocity and acceleration trajectories 
-% using Adaptive Damped Least Squares (DLS) / pseudo-inverse of the geometric Jacobian.
-%
-% Syntax:
-%   [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel, eeAcc, eeName)
-%   [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel, eeAcc, eeName, lambda)
-%   [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel, eeAcc, eeName, lambda, condThreshold)
-%   [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel, eeAcc, eeName, lambda, condThreshold, velThreshold)
-%
-% Inputs:
-%   puma          - RigidBodyTree robot model (e.g., puma560)
-%   q             - numJoints x numSteps matrix of joint positions
-%   trajTimes     - 1 x numSteps vector of trajectory timestamps
-%   eeVel         - 6 x numSteps (or 3 x numSteps) task-space velocity [angular; linear]
-%   eeAcc         - 6 x numSteps (or 3 x numSteps) task-space acceleration [angular; linear]
-%   eeName        - End-effector body name (e.g., 'link7')
-%   lambda        - (Optional) Max DLS damping factor for singularity robustness (default: 0.05).
-%                   Set lambda = 0 for standard un-damped pseudo-inverse.
-%   condThreshold - (Optional) Singularity condition number threshold (default: 1e6)
-%   velThreshold  - (Optional) Velocity cutoff threshold below which qd is set to zero (default: 0.1)
-%
-% Outputs:
-%   qd            - numJoints x numSteps matrix of joint velocities
-%   qdd           - numJoints x numSteps matrix of joint accelerations
+
 
     if nargin < 7 || isempty(lambda)
         lambda = 0.05; % Default max DLS damping factor

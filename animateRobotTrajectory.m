@@ -1,19 +1,5 @@
 function animateRobotTrajectory(puma, q, trajTimes, waypoints, eeName, hTraj, tolerance)
-% ANIMATEROBOTTRAJECTORY Animates the robot following a trajectory and displays
-% the traced end-effector path with coordinate frames at waypoints.
-%
-% Syntax:
-%   animateRobotTrajectory(puma, q, trajTimes, waypoints, eeName, hTraj)
-%   animateRobotTrajectory(puma, q, trajTimes, waypoints, eeName, hTraj, tolerance)
-%
-% Inputs:
-%   puma      - RigidBodyTree robot model (e.g., puma560)
-%   q         - numJoints x N matrix of joint angles over time
-%   trajTimes - 1 x N vector of time steps
-%   waypoints - 3 x M matrix of Cartesian waypoint positions [x; y; z]
-%   eeName    - Name of the end-effector body (e.g., 'link7')
-%   hTraj     - (Optional) Line handle of the trajectory path plot
-%   tolerance - (Optional) Proximity tolerance to detect waypoints (default: 1e-3)
+
 
     if nargin < 7 || isempty(tolerance)
         tolerance = 1e-3;
