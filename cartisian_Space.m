@@ -32,7 +32,14 @@ end
 
 % Define Inverse Kinematics solver
 ik = inverseKinematics('RigidBodyTree', puma);
+
+% Calculation Method: 'NumericalDifferentiation' or 'jacobian matrix'
+calculatingmethod = 'NumericalDifferentiation';
+
+% Thresholds & Damping parameters
 angleThreshold = 0.000001;
+velThreshold = 0.1;
+lambda = 0.05;
 
 
 plotMode = 1; 
@@ -60,22 +67,51 @@ ikWeights_noOrient = [0 0 0 1 1 1];
 [config_noOrient, ~] = followCartesianTrajectory(puma, eeName, ik, ikWeights_noOrient, ...
     jointAnglesHome, taskPos, trajTimes, waypoints, TrajPoints, angleThreshold, [], [], 0);
 q_noOrient = config_noOrient';
-jointVel_noOrient = [zeros(numJoints, 1), diff(q_noOrient, 1, 2) / ts];
-jointAcc_noOrient = [zeros(numJoints, 1), diff(jointVel_noOrient, 1, 2) / ts];
-jointJerks_noOrient = [zeros(numJoints, 1), diff(jointAcc_noOrient, 1, 2) / ts];
+
+% Compute actual task-space orientation from q using forward kinematics
 [~, taskOrient_noOrient, ~, taskOrientVel_noOrient, ~, taskOrientAcc_noOrient] = ...
     computeTaskSpaceNumericalDifferentiation(puma, q_noOrient, trajTimes, eeName, angleThreshold);
+
+eeVel_noOrient = [taskOrientVel_noOrient; taskVel];
+eeAcc_noOrient = [taskOrientAcc_noOrient; taskAcc];
+
+% Compute joint velocities, accelerations, and jerks based on calculatingmethod
+if strcmpi(calculatingmethod, 'NumericalDifferentiation')
+    jointVel_noOrient = [zeros(numJoints, 1), diff(q_noOrient, 1, 2) / ts];
+    jointAcc_noOrient = [zeros(numJoints, 1), diff(jointVel_noOrient, 1, 2) / ts];
+    jointJerks_noOrient = [zeros(numJoints, 1), diff(jointAcc_noOrient, 1, 2) / ts];
+else
+    [jointVel_noOrient, jointAcc_noOrient] = computeJointVelAccInverseJacobian(puma, ...
+        q_noOrient, trajTimes, eeVel_noOrient, eeAcc_noOrient, eeName, lambda, angleThreshold, velThreshold);
+    jointJerks_noOrient = [zeros(numJoints, 1), diff(jointAcc_noOrient, 1, 2) / ts];
+    jointJerks_noOrient(abs(jointJerks_noOrient) < angleThreshold) = 0;
+end
+
 %% Tracking 2
 disp('Tracking Cartesian Trajectory with ikWeights = [1 1 1 1 1 1]...');
 ikWeights_orient = [1 1 1 1 1 1];
 [config_orient, ~] = followCartesianTrajectory(puma, eeName, ik, ikWeights_orient, ...
     jointAnglesHome, taskPos, trajTimes, waypoints, [], angleThreshold, [], cmdOrient, 1);
 q_orient = config_orient';
-jointVel_orient = [zeros(numJoints, 1), diff(q_orient, 1, 2) / ts];
-jointAcc_orient = [zeros(numJoints, 1), diff(jointVel_orient, 1, 2) / ts];
-jointJerks_orient = [zeros(numJoints, 1), diff(jointAcc_orient, 1, 2) / ts];
+
+% Compute actual task-space orientation from q using forward kinematics
 [~, taskOrient_orient, ~, taskOrientVel_orient, ~, taskOrientAcc_orient] = ...
     computeTaskSpaceNumericalDifferentiation(puma, q_orient, trajTimes, eeName, angleThreshold);
+
+eeVel_orient = [taskOrientVel_orient; taskVel];
+eeAcc_orient = [taskOrientAcc_orient; taskAcc];
+
+% Compute joint velocities, accelerations, and jerks based on calculatingmethod
+if strcmpi(calculatingmethod, 'NumericalDifferentiation')
+    jointVel_orient = [zeros(numJoints, 1), diff(q_orient, 1, 2) / ts];
+    jointAcc_orient = [zeros(numJoints, 1), diff(jointVel_orient, 1, 2) / ts];
+    jointJerks_orient = [zeros(numJoints, 1), diff(jointAcc_orient, 1, 2) / ts];
+else
+    [jointVel_orient, jointAcc_orient] = computeJointVelAccInverseJacobian(puma, ...
+        q_orient, trajTimes, eeVel_orient, eeAcc_orient, eeName, lambda, angleThreshold, velThreshold);
+    jointJerks_orient = [zeros(numJoints, 1), diff(jointAcc_orient, 1, 2) / ts];
+    jointJerks_orient(abs(jointJerks_orient) < angleThreshold) = 0;
+end
 
 %% Joint-Space Comparison Plots
 labels = {'ikWeights = [0 0 0 1 1 1]', 'ikWeights = [1 1 1 1 1 1]'};

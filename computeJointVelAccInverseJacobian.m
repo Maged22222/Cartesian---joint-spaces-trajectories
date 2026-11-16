@@ -1,16 +1,13 @@
 function [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel, eeAcc, eeName, lambda, condThreshold, velThreshold)
 
-
     if nargin < 7 || isempty(lambda)
-        lambda = 0.05; % Default max DLS damping factor
+        lambda = 0.05;
     end
-
     if nargin < 8 || isempty(condThreshold) || condThreshold < 1
         condThreshold = 1e6;
     end
-
     if nargin < 9 || isempty(velThreshold)
-        velThreshold = 0.1; % Cutoff threshold: values less than 0.1 are set to zero
+        velThreshold = 0.1;
     end
 
     % If only 3-row linear vectors are provided, prepend 3 zeros for angular components
@@ -23,30 +20,23 @@ function [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel
 
     numJoints = size(q, 1);
     numSteps = size(q, 2);
-
     qd = zeros(numJoints, numSteps);
     qdd = zeros(numJoints, numSteps);
 
-    epsilon = 0.005; % Singularity threshold for adaptive damping
+    epsilon = 0.005; 
 
     for idx = 1:numSteps
-        % Get joint configuration at this time step
+ 
         config = q(:, idx)';
-
-        % Compute Jacobian at the current configuration
         J = geometricJacobian(puma, config, eeName);
-
-        % Compute Jacobian inverse using Singularity-Adaptive DLS
         if lambda > 0
             [U, S, V] = svd(J, 'econ');
             s = diag(S);
             sigma_min = min(s);
-
-            % Adaptive damping: only active when approaching singularity (sigma_min < epsilon)
             if sigma_min < epsilon
                 lam2 = lambda^2 * (1 - (sigma_min / epsilon)^2);
             else
-                lam2 = 0; % Exact un-damped inversion
+                lam2 = 0; 
             end
 
             s_dls = s ./ (s.^2 + lam2);
@@ -61,16 +51,10 @@ function [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel
             J_inv = pinv(J);
         end
 
-        % Compute joint velocities using the DLS inverse Jacobian
         qd(:, idx) = J_inv * eeVel(:, idx);
-
-        % If abs(qd(:, idx)) < velThreshold is true, zero out qd and qdd for the same index
         zeroVelMask = abs(qd(:, idx)) < velThreshold;
         qd(zeroVelMask, idx) = 0;
 
-        % Time derivative of the Jacobian along the motion: dJ/dt = sum_i (dJ/dq_i) * qd_i
-        % Computed as a central directional derivative in the direction of qd
-        % (exact up to O(h^2), valid for all time steps including idx = 1, independent of dt).
         h = 1e-6;
         currentJointVel = qd(:, idx)';
         Jplus  = geometricJacobian(puma, config + h * currentJointVel, eeName);
