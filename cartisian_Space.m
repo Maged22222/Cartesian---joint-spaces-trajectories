@@ -68,14 +68,12 @@ ikWeights_noOrient = [0 0 0 1 1 1];
     jointAnglesHome, taskPos, trajTimes, waypoints, TrajPoints, angleThreshold, [], [], 0);
 q_noOrient = config_noOrient';
 
-% Compute actual task-space orientation from q using forward kinematics
 [~, taskOrient_noOrient, ~, taskOrientVel_noOrient, ~, taskOrientAcc_noOrient] = ...
     computeTaskSpaceNumericalDifferentiation(puma, q_noOrient, trajTimes, eeName, angleThreshold);
 
 eeVel_noOrient = [taskOrientVel_noOrient; taskVel];
 eeAcc_noOrient = [taskOrientAcc_noOrient; taskAcc];
 
-% Compute joint velocities, accelerations, and jerks based on calculatingmethod
 if strcmpi(calculatingmethod, 'NumericalDifferentiation')
     jointVel_noOrient = [zeros(numJoints, 1), diff(q_noOrient, 1, 2) / ts];
     jointAcc_noOrient = [zeros(numJoints, 1), diff(jointVel_noOrient, 1, 2) / ts];
@@ -94,14 +92,12 @@ ikWeights_orient = [1 1 1 1 1 1];
     jointAnglesHome, taskPos, trajTimes, waypoints, [], angleThreshold, [], cmdOrient, 1);
 q_orient = config_orient';
 
-% Compute actual task-space orientation from q using forward kinematics
 [~, taskOrient_orient, ~, taskOrientVel_orient, ~, taskOrientAcc_orient] = ...
     computeTaskSpaceNumericalDifferentiation(puma, q_orient, trajTimes, eeName, angleThreshold);
 
 eeVel_orient = [taskOrientVel_orient; taskVel];
 eeAcc_orient = [taskOrientAcc_orient; taskAcc];
 
-% Compute joint velocities, accelerations, and jerks based on calculatingmethod
 if strcmpi(calculatingmethod, 'NumericalDifferentiation')
     jointVel_orient = [zeros(numJoints, 1), diff(q_orient, 1, 2) / ts];
     jointAcc_orient = [zeros(numJoints, 1), diff(jointVel_orient, 1, 2) / ts];
