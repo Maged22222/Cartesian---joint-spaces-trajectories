@@ -53,7 +53,7 @@ jointWaypoints_noOrient = jointWaypoints;
 %% Generate trajectory on joint space
 [q, qd, qdd] = interpolateJointTrajectory(trajType, jointWaypoints, waypointTimes, trajTimes, waypointAccelTimes, angleThreshold);
 %% Trajectory following loop
-animateRobotTrajectory(puma, q, trajTimes, waypoints, eeName, hTraj);
+animateRobotTrajectory(puma, q, trajTimes, waypoints, eeName, hTraj,angleThreshold);
 
 %% Plot task-space trajectory for includeOrientation = false (using jacobian matrix(JM))
 [eePos, eeOrient, eeVel, eeAcc] = computeTaskSpaceWithJacobian(puma, q, qd, qdd, eeName, angleThreshold);

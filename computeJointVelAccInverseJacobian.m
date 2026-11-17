@@ -1,23 +1,6 @@
 function [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel, eeAcc, eeName, lambda, condThreshold, velThreshold)
 
-    if nargin < 7 || isempty(lambda)
-        lambda = 0.05;
-    end
-    if nargin < 8 || isempty(condThreshold) || condThreshold < 1
-        condThreshold = 1e6;
-    end
-    if nargin < 9 || isempty(velThreshold)
-        velThreshold = 0.1;
-    end
-
-    % If only 3-row linear vectors are provided, prepend 3 zeros for angular components
-    if size(eeVel, 1) == 3
-        eeVel = [zeros(3, size(eeVel, 2)); eeVel];
-    end
-    if size(eeAcc, 1) == 3
-        eeAcc = [zeros(3, size(eeAcc, 2)); eeAcc];
-    end
-
+ 
     numJoints = size(q, 1);
     numSteps = size(q, 2);
     qd = zeros(numJoints, numSteps);
@@ -60,16 +43,10 @@ function [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel
         Jplus  = geometricJacobian(puma, config + h * currentJointVel, eeName);
         Jminus = geometricJacobian(puma, config - h * currentJointVel, eeName);
         Jdot = (Jplus - Jminus) / (2 * h);
-
-        % Compute joint accelerations using inverse Jacobian relation:
-        % eeAcc = J*qdd + Jdot*qd  =>  qdd = J_inv * (eeAcc - Jdot * qd)
         qdd(:, idx) = J_inv * (eeAcc(:, idx) - Jdot * qd(:, idx));
-
-        % Zero out qdd for the same index where qd was below velThreshold
         qdd(zeroVelMask, idx) = 0;
     end
 
-    % Final threshold filtering to ensure all elements satisfy the cutoff
     zeroVelAll = abs(qd) < velThreshold;
     qd(zeroVelAll) = 0;
     qdd(zeroVelAll) = 0;

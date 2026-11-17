@@ -1,23 +1,5 @@
 function [q, qd, qdd] = interpolateJointTrajectory(trajType, jointWaypoints, waypointTimes, trajTimes, waypointAccelTimes, angleThreshold)
-% INTERPOLATEJOINTTRAJECTORY Generates joint-space position, velocity, and acceleration trajectories.
-%
-% Syntax:
-%   [q, qd, qdd] = interpolateJointTrajectory(trajType, jointWaypoints, waypointTimes, trajTimes)
-%   [q, qd, qdd] = interpolateJointTrajectory(trajType, jointWaypoints, waypointTimes, trajTimes, waypointAccelTimes)
-%   [q, qd, qdd] = interpolateJointTrajectory(trajType, jointWaypoints, waypointTimes, trajTimes, waypointAccelTimes, angleThreshold)
-%
-% Inputs:
-%   trajType           - Trajectory type: 'trap', 'cubic', 'quintic', or 'bspline'
-%   jointWaypoints     - numJoints x numWaypoints matrix of joint configurations at waypoints
-%   waypointTimes      - 1 x numWaypoints vector of waypoint arrival times
-%   trajTimes          - 1 x N vector of query time stamps
-%   waypointAccelTimes - (Optional) Acceleration times for trapezoidal velocity profile
-%   angleThreshold     - (Optional) Threshold to zero out near-zero joint angles
-%
-% Outputs:
-%   q   - numJoints x N matrix of joint positions
-%   qd  - numJoints x N matrix of joint velocities
-%   qdd - numJoints x N matrix of joint accelerations
+
 
     [numJoints, numWaypoints] = size(jointWaypoints);
     numTimeSteps = numel(trajTimes);
@@ -48,7 +30,7 @@ function [q, qd, qdd] = interpolateJointTrajectory(trajType, jointWaypoints, way
             error('Invalid trajectory type! Use ''trap'', ''cubic'', ''quintic'', or ''bspline''');
     end
 
-    % Set small angles to zero if threshold provided
+    
     if nargin >= 6 && ~isempty(angleThreshold)
         q(abs(q) < angleThreshold) = 0;
     end
