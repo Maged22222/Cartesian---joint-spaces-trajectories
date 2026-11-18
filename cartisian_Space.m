@@ -34,7 +34,7 @@ end
 ik = inverseKinematics('RigidBodyTree', puma);
 
 % Calculation Method: 'NumericalDifferentiation' or 'jacobian matrix'
-calculatingmethod = 'NumericalDifferentiation';
+calculatingmethod = 'jacobian matrix';
 
 % Thresholds & Damping parameters
 angleThreshold = 0.000001;
@@ -62,7 +62,7 @@ if plotMode == 1
 end
 
 %% Tracking 1
-disp('Tracking Cartesian Trajectory with ikWeights = [0 0 0 1 1 1]...');
+disp('Tracking Cartesian Trajectory with Ik_Weights = [0 0 0 1 1 1]...');
 ikWeights_noOrient = [0 0 0 1 1 1];
 [config_noOrient, ~] = followCartesianTrajectory(puma, eeName, ik, ikWeights_noOrient, ...
     jointAnglesHome, taskPos, trajTimes, waypoints, TrajPoints, angleThreshold, [], [], 0);
@@ -86,7 +86,7 @@ else
 end
 
 %% Tracking 2
-disp('Tracking Cartesian Trajectory with ikWeights = [1 1 1 1 1 1]...');
+disp('Tracking Cartesian Trajectory with Ik_Weights = [1 1 1 1 1 1]...');
 ikWeights_orient = [1 1 1 1 1 1];
 [config_orient, ~] = followCartesianTrajectory(puma, eeName, ik, ikWeights_orient, ...
     jointAnglesHome, taskPos, trajTimes, waypoints, [], angleThreshold, [], cmdOrient, 1);
@@ -110,7 +110,7 @@ else
 end
 
 %% Joint-Space Comparison Plots
-labels = {'ikWeights = [0 0 0 1 1 1]', 'ikWeights = [1 1 1 1 1 1]'};
+labels = {'  Ik_Weights = [0 0 0 1 1 1]', '  Ik_Weights = [1 1 1 1 1 1]'};
 plotJointComparison(trajTimes, q_noOrient, q_orient, waypointTimes, labels);
 plotJointSpaceTrajectories(trajTimes, {q_noOrient, q_orient}, ...
     {jointVel_noOrient, jointVel_orient}, ...
@@ -123,9 +123,9 @@ plotJointSpaceTrajectories(trajTimes, {q_noOrient, q_orient}, ...
 eeVel_noOrient = [taskOrientVel_noOrient; taskVel];
 eeAcc_noOrient = [taskOrientAcc_noOrient; taskAcc];
 plots(trajTimes, taskPos, taskOrient_noOrient, eeVel_noOrient, eeAcc_noOrient, ...
-    [], numJoints, ts, waypoints, 'ikWeights = [0 0 0 1 1 1]');
+    [], numJoints, ts, waypoints, '  Ik_Weights = [0 0 0 1 1 1]');
 
 eeVel_orient = [taskOrientVel_orient; taskVel];
 eeAcc_orient = [taskOrientAcc_orient; taskAcc];
 plots(trajTimes, taskPos, taskOrient_orient, eeVel_orient, eeAcc_orient, ...
-    [], numJoints, ts, waypoints, 'ikWeights = [1 1 1 1 1 1]');
+    [], numJoints, ts, waypoints, '  Ik_Weights = [1 1 1 1 1 1]');

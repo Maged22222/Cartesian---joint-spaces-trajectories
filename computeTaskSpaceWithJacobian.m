@@ -21,7 +21,6 @@ function [eePos, eeOrient, eeVel, eeAcc] = computeTaskSpaceWithJacobian(puma, q,
             jointAcc(abs(jointAcc) < angleThreshold) = 0;
         end
 
-        % Compute forward kinematics to get end-effector position and orientation
         eeTform = getTransform(puma, config, eeName);
         eePos(:, idx) = tform2trvec(eeTform)';
         eeOrient(:, idx) = tform2eul(eeTform)';

@@ -3,9 +3,7 @@ function [eePositions, eeOrientations, eeVelocities, eeAngularVelocities, ...
           computeTaskSpaceNumericalDifferentiation(puma, q, trajTimes, eeName, angleThreshold)
 
 
-    if nargin < 5 || isempty(angleThreshold)
-        angleThreshold = 0;
-    end
+    
 
     numTimeSteps = numel(trajTimes);
     eePositions = zeros(3, numTimeSteps);
@@ -20,11 +18,9 @@ function [eePositions, eeOrientations, eeVelocities, eeAngularVelocities, ...
         eeOrientations(:, tIdx) = tform2eul(eePose);
         eeRotm(:, :, tIdx) = tform2rotm(eePose);
     end
-
-    % Remove +/-pi wrapping of Euler angles (avoids huge fake spikes)
     eeOrientations = unwrap(eeOrientations, [], 2);
 
-    % Set small values to zero
+   
     if angleThreshold > 0
         eePositions(abs(eePositions) < angleThreshold) = 0;
         eeOrientations(abs(eeOrientations) < angleThreshold) = 0;
@@ -32,13 +28,9 @@ function [eePositions, eeOrientations, eeVelocities, eeAngularVelocities, ...
 
     dt = mean(diff(trajTimes));
 
-    % Linear velocity / acceleration (central differences, time-aligned)
     eeVelocities = centralDiff(eePositions, dt);
     eeAccelerations = centralDiff(eeVelocities, dt);
 
-    % Angular velocity from rotation matrices: [omega]x = dR/dt * R'
-    % Using the relative rotation between neighbouring samples:
-    %   R(k+1) * R(k-1)' = expm([omega]x * 2*dt)  ->  omega = axis*angle / (2*dt)
     eeAngularVelocities = zeros(3, numTimeSteps);
     for tIdx = 1:numTimeSteps
         iPrev = max(tIdx - 1, 1);
@@ -49,13 +41,12 @@ function [eePositions, eeOrientations, eeVelocities, eeAngularVelocities, ...
     end
     eeAngularAccelerations = centralDiff(eeAngularVelocities, dt);
 
-    % Time vectors (same length as trajTimes because central differences are used)
     trajTimesVel = trajTimes;
     trajTimesAcc = trajTimes;
 end
 
 function dX = centralDiff(X, dt)
-% Central difference along columns (one-sided at the ends), same size as X.
+
     dX = zeros(size(X));
     if size(X, 2) < 2
         return;

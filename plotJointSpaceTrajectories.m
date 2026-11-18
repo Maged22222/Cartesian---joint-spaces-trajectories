@@ -1,30 +1,10 @@
 function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypointTimes, titleSuffix, lineColor, qddd)
-% PLOTJOINTSPACETRAJECTORIES Plots position, velocity, and acceleration for each joint.
-% Optionally plots jerk if qddd is provided.
-% Supports both single trajectory plotting and comparative overlay plotting.
-%
-% Syntax (Single Trajectory):
-%   plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypointTimes)
-%   plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypointTimes, titleSuffix, lineColor, qddd)
-%
-% Syntax (Comparative Mode - e.g. Numerical Diff vs Inverse Jacobian):
-%   plotJointSpaceTrajectories(trajTimes, q, {qd1, qd2}, {qdd1, qdd2}, [], waypointTimes, labels, {'b', 'r'}, {qddd1, qddd2})
-%
-% Inputs:
-%   trajTimes      - 1 x N vector of trajectory timestamps
-%   q              - numJoints x N matrix (or {q1, q2} cell array) of joint positions
-%   qd             - numJoints x N matrix (or {qd1, qd2} cell array) of joint velocities
-%   qdd            - numJoints x N matrix (or {qdd1, qdd2} cell array) of joint accelerations
-%   jointWaypoints - (Optional) numJoints x numWaypoints matrix of waypoint joint configurations
-%   waypointTimes  - 1 x numWaypoints vector of waypoint arrival times
-%   titleSuffix    - (Optional) String suffix for titles, or cell array of comparison labels
-%   lineColor      - (Optional) Line color string (single mode) or cell array {'b', 'r'} (comparison mode)
-%   qddd           - (Optional) numJoints x N matrix (or {qddd1, qddd2} cell array) of joint jerks
+
 
     isComp = iscell(qd) || iscell(q) || iscell(qdd);
 
     if isComp
-        % Comparison Mode
+        
         if nargin >= 7 && iscell(titleSuffix)
             labels = titleSuffix;
             titleSuffix = '';
@@ -45,7 +25,7 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
             color2 = lineColor{2};
         end
 
-        % Extract q
+ 
         if iscell(q)
             q1 = q{1};
             q2 = q{2};
@@ -56,15 +36,15 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
             sharedQ = true;
         end
 
-        % Extract qd
+        
         qd1 = qd{1};
         qd2 = qd{2};
 
-        % Extract qdd
+     
         qdd1 = qdd{1};
         qdd2 = qdd{2};
 
-        % Extract qddd
+       
         hasJerk = (nargin >= 9 && ~isempty(qddd));
         if hasJerk
             if iscell(qddd)
@@ -87,7 +67,6 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
         for i = 1:numJoints
             figure('Name', sprintf('Joint %d: %s vs %s', i, labels{1}, labels{2}), 'NumberTitle', 'off');
 
-            % 1. Joint Position (Displays the comparison legend for the figure)
             subplot(numSubplots, 1, 1);
             hold on;
             hPos1 = plot(trajTimes, q1(i, :), 'Color', color1, 'LineStyle', style1, 'LineWidth', 1.5);
@@ -113,7 +92,7 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
             ylabel('Position (rad)');
             grid on;
 
-            % 2. Joint Velocity
+            % Joint Velocity
             subplot(numSubplots, 1, 2);
             hold on;
             plot(trajTimes, qd1(i, :), 'Color', color1, 'LineStyle', style1, 'LineWidth', 1.5);
@@ -126,7 +105,7 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
             ylabel('Velocity (rad/s)');
             grid on;
 
-            % 3. Joint Acceleration
+            %  Joint Acceleration
             subplot(numSubplots, 1, 3);
             hold on;
             plot(trajTimes, qdd1(i, :), 'Color', color1, 'LineStyle', style1, 'LineWidth', 1.5);
@@ -139,7 +118,7 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
             ylabel('Acceleration (rad/s^2)');
             grid on;
 
-            % 4. Joint Jerk (if provided)
+            % Joint Jerk (if provided)
             if hasJerk
                 subplot(numSubplots, 1, 4);
                 hold on;
@@ -158,7 +137,7 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
         end
 
     else
-        % Single Trajectory Mode
+       
         if nargin < 7 || isempty(titleSuffix)
             titleSuffix = '';
         else
@@ -184,8 +163,6 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
 
         for i = 1:numJoints
             figure;
-
-            % Plot joint position (Single legend on first subplot)
             subplot(numSubplots, 1, 1);
             hold on;
             hTraj = plot(trajTimes, q(i, :), 'Color', lineColor, 'LineWidth', 1.5);
@@ -227,7 +204,7 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
             ylabel('Acceleration (rad/s^2)');
             grid on;
 
-            % Plot joint jerk (if provided)
+            % Plot joint jerk 
             if hasJerk
                 subplot(numSubplots, 1, 4);
                 hold on;
