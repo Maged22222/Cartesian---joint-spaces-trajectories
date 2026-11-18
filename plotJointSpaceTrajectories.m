@@ -8,9 +8,7 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
         if nargin >= 7 && iscell(titleSuffix)
             labels = titleSuffix;
             titleSuffix = '';
-        elseif nargin >= 7 && ischar(titleSuffix) && ~isempty(titleSuffix)
-            labels = {'Method 1', 'Method 2'};
-            titleSuffix = ['  ', titleSuffix];
+    
         else
             labels = {'Numerical Differentiation', 'Inverse Jacobian'};
             titleSuffix = '';
@@ -118,7 +116,7 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
             ylabel('Acceleration (rad/s^2)');
             grid on;
 
-            % Joint Jerk (if provided)
+            % Joint Jerk 
             if hasJerk
                 subplot(numSubplots, 1, 4);
                 hold on;
@@ -138,16 +136,7 @@ function plotJointSpaceTrajectories(trajTimes, q, qd, qdd, jointWaypoints, waypo
 
     else
        
-        if nargin < 7 || isempty(titleSuffix)
-            titleSuffix = '';
-        else
-            titleSuffix = ['  ', titleSuffix];
-        end
-
-        if nargin < 8 || isempty(lineColor)
-            lineColor = 'b';
-        end
-
+     
         numJoints = size(q, 1);
         numWaypoints = numel(waypointTimes);
 

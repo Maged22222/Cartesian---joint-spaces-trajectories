@@ -44,16 +44,11 @@ function [qd, qdd] = computeJointVelAccInverseJacobian(puma, q, trajTimes, eeVel
         Jplus  = geometricJacobian(puma, config + h * currentJointVel, eeName);
         Jminus = geometricJacobian(puma, config - h * currentJointVel, eeName);
         Jdot = (Jplus - Jminus) / (2 * h);
-
-        % Compute joint accelerations using inverse Jacobian relation:
-        % eeAcc = J*qdd + Jdot*qd  =>  qdd = J_inv * (eeAcc - Jdot * qd)
         qdd(:, idx) = J_inv * (eeAcc(:, idx) - Jdot * qd(:, idx));
-
-        % Zero out qdd for the same index where qd was below velThreshold
         qdd(zeroVelMask, idx) = 0;
     end
 
-    % Final threshold filtering to ensure all elements satisfy the cutoff
+
     zeroVelAll = abs(qd) < velThreshold;
     qd(zeroVelAll) = 0;
     qdd(zeroVelAll) = 0;
