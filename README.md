@@ -1,0 +1,1 @@
+This code is used to clarify the difference between joint and Cartesian spaces for the same points, so the plots show the performance differences. there is Cartesian_space and joint_space files for testing the code. 
